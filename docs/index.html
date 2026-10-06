@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agentic Watchlist Dashboard</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#14181f;--mute:#6a7280;--line:#e3e6eb;--up:#0b8a4b;--dn:#c62828;--acc:#2456d6;--track:#e3e6eb}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1116;--card:#171b22;--ink:#e8ebf0;--mute:#8b93a1;--line:#262c36;--up:#35c27a;--dn:#ef6a6a;--acc:#6e97ff;--track:#2b323d}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+header{padding:16px 20px 8px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:baseline;justify-content:space-between}
+h1{font-size:20px;margin:0}
+.stamp{color:var(--mute);font-size:12px}
+.stamp a,header a{color:var(--acc);text-decoration:none}
+nav{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding:0 20px 8px;position:sticky;top:0;background:var(--bg);z-index:5}
+nav a{flex:none;white-space:nowrap;color:var(--ink);text-decoration:none;border:1px solid var(--line);background:var(--card);padding:4px 10px;border-radius:99px;font-size:12px}
+main{padding:0 20px 40px;display:grid;gap:16px}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow:hidden}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);margin:0 0 8px}
+h3{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.05em;margin:12px 0 6px;font-weight:600}
+.up{color:var(--up)}.dn{color:var(--dn)}.mu{color:var(--mute)}
+.note{color:var(--mute);font-size:12px;margin-top:6px}
+.banner{margin:0 20px 12px;padding:10px 12px;border:1px solid var(--dn);border-radius:8px;color:var(--dn);display:none}
+/* basket cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;text-decoration:none;color:var(--ink);display:block}
+.card .nm{font-weight:600;margin-bottom:4px}
+.card .big{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.card .row{display:flex;justify-content:space-between;font-size:12px;color:var(--mute);margin-top:3px;font-variant-numeric:tabular-nums}
+.card .row b{color:var(--ink);font-weight:500}
+.bar{height:6px;border-radius:3px;background:var(--track);margin-top:8px;overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{border:1px solid var(--line);border-radius:99px;padding:2px 9px;font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.sub{font-size:11px;color:var(--mute);margin:6px 0 3px}
+.twocol{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px}
+/* tables */
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{font-weight:500;color:var(--mute);font-size:11px;text-align:right;padding:3px 7px;cursor:pointer;white-space:nowrap;user-select:none}
+th:first-child,td:first-child{text-align:left}
+th.on{color:var(--ink)}
+td{padding:6px 7px;text-align:right;border-top:1px solid var(--line);white-space:nowrap}
+td.nm{font-weight:500;white-space:normal;min-width:140px}
+td.nm small{display:block;color:var(--mute);font-weight:400;font-size:11px}
+tr.main{cursor:pointer}
+tr.main:hover td{background:var(--bg)}
+tr.nw td{white-space:normal;text-align:left;background:var(--bg);padding:6px 12px 10px 24px;font-size:13px}
+tr.nw a{color:var(--ink);text-decoration:none;display:block;padding:2px 0}
+tr.nw a:hover{color:var(--acc)}
+.rng{position:relative;display:inline-block;width:84px;height:6px;border-radius:3px;background:var(--track);vertical-align:middle}
+.rng i{position:absolute;top:-3px;width:3px;height:12px;border-radius:2px;background:var(--ink)}
+.pill{display:inline-block;font-size:11px;padding:1px 6px;border-radius:99px;border:1px solid var(--line);margin-left:3px}
+.pill.up{border-color:var(--up)}.pill.dn{border-color:var(--dn)}
+svg.spark{width:70px;height:20px;vertical-align:middle}
+.hide-sm{}
+@media(max-width:700px){.hide-sm{display:none}}
+button.copy{padding:10px 16px;font-size:14px;border-radius:8px;border:0;background:var(--acc);color:#fff;cursor:pointer}
+
+:root{--warn:#b26a00}
+@media (prefers-color-scheme:dark){:root{--warn:#e0a030}}
+.warn{color:var(--warn)}.cool{color:var(--acc)}
+.movers{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-top:12px}
+.panel{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.panel h3{margin:0 0 8px}
+.mrow{display:grid;grid-template-columns:86px 1fr 62px;align-items:center;gap:8px;padding:3px 0;font-variant-numeric:tabular-nums}
+.mt{line-height:1.15}.mt b{font-weight:600}.mt small{display:block;color:var(--mute);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mbar{position:relative;height:8px;background:var(--track);border-radius:4px;overflow:hidden}
+.mbar i{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0}
+.mbar i.u{background:var(--up)}.mbar i.d{background:var(--dn)}.mbar i.v{background:var(--acc)}
+.mbar u{position:absolute;top:0;bottom:0;width:2px;background:var(--bg);opacity:.9}
+.mv{text-align:right;font-size:13px;font-weight:500}
+.mv small{display:block;font-size:10px;font-weight:400}
+.empty{color:var(--mute);font-size:12px;padding:4px 0}
+.rsi{position:relative;display:inline-block;width:64px;height:6px;border-radius:3px;background:var(--track);vertical-align:middle;overflow:visible}
+.rsi:before{content:"";position:absolute;left:0;top:0;bottom:0;width:30%;border-radius:3px 0 0 3px;background:var(--acc);opacity:.28}
+.rsi:after{content:"";position:absolute;right:0;top:0;bottom:0;width:30%;border-radius:0 3px 3px 0;background:var(--warn);opacity:.32}
+.rsi b{position:absolute;top:-3px;width:3px;height:12px;border-radius:2px;background:var(--ink);margin-left:-1px}
+.zonelab{display:flex;justify-content:space-between;font-size:10px;color:var(--mute);margin-top:6px}
+#live{padding-bottom:6px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Agentic Watchlist Dashboard</h1>
+  <div class="stamp"><a href="https://alternateken.github.io/macro-updates/">&larr; Macro dashboard</a> &nbsp;·&nbsp; <span id="stamp">Loading…</span></div>
+</header>
+<div class="banner" id="banner"></div>
+<nav id="nav"></nav>
+<main id="main"></main>
+
+<script>
+const fmt=(v,d=2)=>v==null||isNaN(v)?'–':v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const pc=(v,d=1)=>v==null||isNaN(v)?'–':(v>0?'+':'')+v.toFixed(d)+'%';
+const cls=v=>v==null?'':v>0?'up':v<0?'dn':'';
+const arrow=v=>v==null?'':v>0?'▲ ':v<0?'▼ ':'';
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+const avg=a=>{const x=a.filter(v=>v!=null&&!isNaN(v));return x.length?x.reduce((p,c)=>p+c,0)/x.length:null};
+const rel=(r,spx)=>r.m1!=null&&spx&&spx.m1!=null?r.m1-spx.m1:null;
+const rangePos=r=>r.hi52>r.lo52?(r.last-r.lo52)/(r.hi52-r.lo52):null;
+function spark(a){
+  if(!a||a.length<2)return '';
+  const mn=Math.min(...a),mx=Math.max(...a),w=70,h=20,rg=(mx-mn)||1;
+  const pts=a.map((v,i)=>[(i/(a.length-1))*w,h-2-((v-mn)/rg)*(h-4)].map(x=>x.toFixed(1)).join(',')).join(' ');
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}"><polyline fill="none" stroke="currentColor" stroke-width="1.5" points="${pts}"/></svg>`;
+}
+let D=null;const sortState={};
+
+function stats(g){
+  const rows=g.rows.filter(r=>!r.missing);
+  const adv=rows.filter(r=>r.pct>0).length, dec=rows.filter(r=>r.pct<0).length;
+  const a50=rows.filter(r=>r.ma50!=null&&r.last>r.ma50).length, n50=rows.filter(r=>r.ma50!=null).length;
+  const a200=rows.filter(r=>r.ma200!=null&&r.last>r.ma200).length, n200=rows.filter(r=>r.ma200!=null).length;
+  return {n:rows.length,adv,dec,day:avg(rows.map(r=>r.pct)),w1:avg(rows.map(r=>r.w1)),m1:avg(rows.map(r=>r.m1)),ytd:avg(rows.map(r=>r.ytd)),
+          rel:avg(rows.map(r=>rel(r,D.spx))),rsi:avg(rows.map(r=>r.rsi)),a50,n50,a200,n200};
+}
+function barRow(r,val,txt,sub,kind,scale,mark){
+  const w=Math.max(2,Math.min(100,Math.abs(val)/scale*100));
+  return `<div class="mrow"><div class="mt"><b>${esc(r.symbol)}</b><small>${esc(r.basket.replace(/^Agentic /,''))}</small></div>
+    <div class="mbar"><i class="${kind}" style="width:${w}%"></i>${mark!=null?`<u style="left:${Math.min(100,mark/scale*100)}%"></u>`:''}</div>
+    <div class="mv ${kind==='u'?'up':kind==='d'?'dn':''}">${txt}${sub?`<small class="${cls(r.pct)}">${sub}</small>`:''}</div></div>`;
+}
+function rsiGauge(v){return `<span class="rsi"><b style="left:${Math.max(0,Math.min(100,v))}%"></b></span>`}
+function rsiCls(v){return v>=70?'warn':v<=30?'cool':''}
+function summary(){
+  const cards=D.groups.map(g=>{
+    const s=stats(g);const tot=s.adv+s.dec||1;
+    return `<a class="card" href="#${slug(g.name)}"><div class="nm">${esc(g.name)} <span class="mu" style="font-weight:400">(${s.n})</span></div>
+      <div class="big ${cls(s.day)}">${arrow(s.day)}${pc(s.day,2)}</div>
+      <div class="row"><span>1W</span><b class="${cls(s.w1)}">${pc(s.w1)}</b></div>
+      <div class="row"><span>1M</span><b class="${cls(s.m1)}">${pc(s.m1)}</b></div>
+      <div class="row"><span>YTD</span><b class="${cls(s.ytd)}">${pc(s.ytd)}</b></div>
+      <div class="row"><span>1M vs S&amp;P</span><b class="${cls(s.rel)}">${s.rel==null?'–':(s.rel>0?'+':'')+s.rel.toFixed(1)+' pts'}</b></div>
+      <div class="row"><span>Above 50d / 200d</span><b>${s.a50}/${s.n50} · ${s.a200}/${s.n200}</b></div>
+      <div class="row"><span>Avg RSI 14</span><b class="${rsiCls(s.rsi)}">${s.rsi==null?'–':s.rsi.toFixed(0)}</b></div>
+      <div class="bar" title="${s.adv} up, ${s.dec} down"><i style="width:${s.adv/tot*100}%;background:var(--up)"></i><i style="width:${s.dec/tot*100}%;background:var(--dn)"></i></div>
+      <div class="row"><span>${s.adv} up</span><span>${s.dec} down</span></div></a>`}).join('');
+  const seenSym=new Set();
+  const all=D.groups.flatMap(g=>g.rows.filter(r=>!r.missing).map(r=>({...r,basket:g.name}))).filter(r=>r.pct!=null&&!seenSym.has(r.symbol)&&seenSym.add(r.symbol));   // a stock in two baskets counts once
+  all.sort((a,b)=>b.pct-a.pct);
+  const best=all.slice(0,5), worst=all.slice(-5).reverse();
+  const sc=Math.max(1,...best.map(r=>Math.abs(r.pct)),...worst.map(r=>Math.abs(r.pct)));
+  const bestH=best.map(r=>barRow(r,r.pct,pc(r.pct,2),'', r.pct>=0?'u':'d',sc)).join('');
+  const worstH=worst.map(r=>barRow(r,r.pct,pc(r.pct,2),'', r.pct>=0?'u':'d',sc)).join('');
+  const vol=all.filter(r=>r.vol_x!=null&&r.vol_x>=1.8).sort((a,b)=>b.vol_x-a.vol_x).slice(0,6);
+  const vsc=Math.max(3,...vol.map(r=>r.vol_x));
+  const volH=vol.length?vol.map(r=>barRow(r,r.vol_x,r.vol_x.toFixed(1)+'×',pc(r.pct,1),'v',vsc,1)).join('')+'<div class="zonelab"><span>Bar = volume vs 20-day avg (line = 1×)</span><span>today may be partial</span></div>':'<div class="empty">No stock above 1.8× its 20-day average volume.</div>';
+  const hot=all.filter(r=>r.rsi!=null&&r.rsi>=70).sort((a,b)=>b.rsi-a.rsi).slice(0,5);
+  const cold=all.filter(r=>r.rsi!=null&&r.rsi<=30).sort((a,b)=>a.rsi-b.rsi).slice(0,5);
+  const rsiRow=r=>`<div class="mrow"><div class="mt"><b>${esc(r.symbol)}</b><small>${esc(r.basket.replace(/^Agentic /,''))}</small></div><div>${rsiGauge(r.rsi)}</div><div class="mv ${rsiCls(r.rsi)}">${r.rsi.toFixed(0)}</div></div>`;
+  const rsiH=(hot.length?`<div class="sub">Overbought (RSI ≥ 70)</div>${hot.map(rsiRow).join('')}`:'')+(cold.length?`<div class="sub">Oversold (RSI ≤ 30)</div>${cold.map(rsiRow).join('')}`:'')||'<div class="empty">No stock with RSI above 70 or below 30.</div>';
+  const near=all.filter(r=>rangePos(r)!=null&&rangePos(r)>=0.97).slice(0,10);
+  const low=all.filter(r=>rangePos(r)!=null&&rangePos(r)<=0.05).slice(0,10);
+  const hl=`<div class="chips">${near.map(r=>`<span class="chip up">▲ ${esc(r.symbol)} 52w high</span>`).join('')}${low.map(r=>`<span class="chip dn">▼ ${esc(r.symbol)} 52w low</span>`).join('')}${near.length+low.length?'':'<span class="mu">None</span>'}</div>`;
+  return `<section id="overview"><h2>Basket overview</h2><div class="cards">${cards}</div>
+   <div class="movers">
+    <div class="panel"><h3>Best today</h3>${bestH}</div>
+    <div class="panel"><h3>Worst today</h3>${worstH}</div>
+    <div class="panel"><h3>Unusual volume</h3>${volH}</div>
+    <div class="panel"><h3>RSI 14 extremes</h3>${rsiH}<div class="zonelab"><span>Blue zone &lt;30 · amber zone &gt;70</span></div><h3 style="margin-top:12px">At 52-week highs / lows</h3>${hl}</div>
+   </div></section>`;
+}
+function maPill(r){
+  const p=(v,l)=>v==null?'':`<span class="pill ${r.last>v?'up':'dn'}">${r.last>v?'▲':'▼'} ${l}</span>`;
+  return p(r.ma50,'50d')+p(r.ma200,'200d');
+}
+const COLS=[['pct','Day'],['w1','1W'],['m1','1M'],['ytd','YTD'],['rel','vs S&P 1M'],['rng','52w range'],['ma','Trend'],['rsi','RSI 14'],['vol_x','Vol ×']];
+function sortVal(r,k){
+  if(k==='label')return (r.label||'').toLowerCase();
+  if(k==='rel')return rel(r,D.spx);
+  if(k==='rng')return rangePos(r);
+  if(k==='ma')return (r.ma50!=null&&r.last>r.ma50?1:0)+(r.ma200!=null&&r.last>r.ma200?1:0);
+  return r[k];
+}
+function basketHTML(g,i){
+  const st=sortState[g.name]||{k:null,dir:-1};
+  let rows=g.rows.slice();
+  if(st.k)rows.sort((a,b)=>{const x=sortVal(a,st.k),y=sortVal(b,st.k);
+    if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return -1;
+    return (typeof x==='string'?x.localeCompare(y):x-y)*st.dir});
+  const th=COLS.map(([k,l])=>`<th class="${st.k===k?'on':''} ${['rng','ma','rsi','vol_x','rel'].includes(k)?'hide-sm':''}" data-b="${i}" data-k="${k}">${l}${st.k===k?(st.dir>0?' ↑':' ↓'):''}</th>`).join('');
+  const body=rows.map((r,j)=>{
+    if(r.missing)return `<tr><td class="nm">${esc(r.label)}<small>${esc(r.symbol)}</small></td><td colspan="10" class="mu" style="text-align:left">No data from Yahoo for this ticker (check the symbol, or it may be newly listed/delisted)</td></tr>`;
+    const rl=rel(r,D.spx),rp=rangePos(r);
+    const nws=(r.news||[]).map(n=>`<a href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.title)}</a>`).join('')||'<span class="mu">No recent headlines</span>';
+    return `<tr class="main" data-n="${i}-${j}"><td class="nm">${esc(r.label)}<small>${esc(r.symbol)} · ${fmt(r.last,2)}</small></td>
+      <td class="${cls(r.pct)}">${arrow(r.pct)}${pc(r.pct,2)}</td><td class="${cls(r.w1)}">${pc(r.w1)}</td><td class="${cls(r.m1)}">${pc(r.m1)}</td><td class="${cls(r.ytd)}">${pc(r.ytd)}</td>
+      <td class="${cls(rl)} hide-sm">${rl==null?'–':(rl>0?'+':'')+rl.toFixed(1)+' pts'}</td>
+      <td class="hide-sm">${rp==null?'–':`<span class="rng" title="${fmt(r.lo52,2)} – ${fmt(r.hi52,2)}"><i style="left:calc(${(rp*100).toFixed(0)}% - 1px)"></i></span> <span class="mu">${(rp*100).toFixed(0)}%</span>`}</td>
+      <td class="hide-sm" style="text-align:left">${maPill(r)}</td>
+      <td class="hide-sm">${r.rsi==null?'–':`${rsiGauge(r.rsi)} <span class="${rsiCls(r.rsi)}" style="display:inline-block;min-width:22px">${r.rsi.toFixed(0)}</span>`}</td>
+      <td class="hide-sm ${r.vol_x>=1.8?'up':''}">${r.vol_x==null?'–':r.vol_x.toFixed(1)+'×'}</td>
+      <td class="${cls(r.m1)}">${spark(r.spark)}</td></tr>
+      <tr class="nw" id="nw-${i}-${j}" style="display:none"><td colspan="11">${nws}</td></tr>`}).join('');
+  const s=stats(g);
+  return `<section id="${slug(g.name)}"><h2>${esc(g.name)} · avg day <span class="${cls(s.day)}">${pc(s.day,2)}</span> · 1M <span class="${cls(s.m1)}">${pc(s.m1)}</span></h2>
+    <div class="scroll"><table><tr><th data-b="${i}" data-k="label" class="${st.k==='label'?'on':''}">Stock</th>${th}<th>45d</th></tr>${body}</table></div>
+    <div class="note">Click a column to sort, click a stock to see its latest headlines. Overseas prices are in local currency. Range bar: left = 52-week low, right = 52-week high. RSI 14 (Wilder, as on TradingView): amber zone above 70, blue zone below 30.</div></section>`;
+}
+function briefText(){
+  const L=[];const f=(v,x=2)=>v==null?'n/a':v.toFixed(x);
+  L.push("I run an equity fund and I am building baskets around the 'agentic AI' theme. Using ONLY the data below (do not invent numbers or news), give me a watchlist brief:");
+  L.push('1. Basket by basket: is momentum confirming or fading? Compare day / 1W / 1M / YTD, relative strength vs the S&P 500, and how many names are above their 50- and 200-day averages.');
+  L.push('2. Dispersion inside each basket: leaders and laggards, and anything that looks like a divergence from the rest of its basket.');
+  L.push('3. Technical flags: names at 52-week highs or lows, trend breaks (price crossing the 50d/200d), RSI 14 extremes (above 70 overbought, below 30 oversold, and RSI divergences from price), unusual volume (vol x is today vs 20-day average and may be partial).');
+  L.push('4. Which headlines actually matter for the thesis, and what I should verify before trading on them.');
+  L.push('5. Give me 3-5 things to check on Bloomberg this morning. Be concise and use short bullets.');
+  L.push('','Data generated: '+D.generated+'. S&P 500 reference: day '+f(D.spx.pct)+'%, 1M '+f(D.spx.m1)+'%, YTD '+f(D.spx.ytd)+'%.');
+  D.groups.forEach(g=>{
+    const s=stats(g);
+    L.push('','## '+g.name+` (avg day ${f(s.day)}%, 1W ${f(s.w1)}%, 1M ${f(s.m1)}%, YTD ${f(s.ytd)}%; above 50d ${s.a50}/${s.n50}, above 200d ${s.a200}/${s.n200})`);
+    g.rows.forEach(r=>{
+      if(r.missing){L.push(`${r.symbol} (${r.label}): no data`);return}
+      const rl=rel(r,D.spx),rp=rangePos(r);
+      L.push(`${r.symbol} (${r.label}): ${f(r.last)} | day ${f(r.pct)}% | 1W ${f(r.w1)}% | 1M ${f(r.m1)}% | YTD ${f(r.ytd)}% | vs S&P 1M ${f(rl,1)} pts | 52w range pos ${rp==null?'n/a':(rp*100).toFixed(0)+'%'} | ${r.ma50==null?'':(r.last>r.ma50?'above':'below')+' 50d'} ${r.ma200==null?'':(r.last>r.ma200?'above':'below')+' 200d'} | RSI14 ${f(r.rsi,0)} | vol ${f(r.vol_x,1)}x`);
+      (r.news||[]).slice(0,2).forEach(n=>L.push('   - '+n.title));
+    });
+  });
+  return L.join('\n');
+}
+function liveBlock(){
+  return `<section id="live"><h2>Live prices from TradingView (refreshes every time you reload this page)</h2>
+   <div class="tradingview-widget-container" id="tvq"></div>
+   <div class="note">Live box is TradingView's free widget, so price and day change only. Free TradingView data can be delayed up to 15 minutes depending on the exchange. RSI, trend, volume and the rest come from the twice-daily refresh. If a row says "symbol not found", add the exchange as a third column in watchlist.txt (for example: SHOP | Shopify | NASDAQ).</div></section>`;
+}
+function mountLive(){
+  const host=document.getElementById('tvq');if(!host)return;
+  const sc=document.createElement('script');sc.type='text/javascript';sc.async=true;
+  sc.src='https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js';
+  sc.text=JSON.stringify({width:'100%',height:560,showSymbolLogo:true,isTransparent:true,locale:'en',
+    colorTheme:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light',
+    symbolsGroups:D.groups.map(g=>({name:g.name.replace(/^Agentic /,''),originalName:g.name,symbols:g.rows.map(r=>({name:r.tv||r.symbol,displayName:r.label}))}))});
+  host.appendChild(sc);
+}
+function claudeBlock(){
+  return `<section id="claude-brief"><h2>Watchlist brief with Claude (free with your Claude Pro chat)</h2>
+   <button class="copy" id="copybtn">Copy brief for Claude</button> <span id="copymsg" class="note"></span>
+   <div class="note">1) Press the button. 2) Open <a href="https://claude.ai/new" target="_blank" rel="noopener" style="color:var(--acc)">claude.ai/new</a>. 3) Paste (Ctrl+V or Cmd+V) and press Enter.</div></section>`;
+}
+function wireBaskets(){
+  document.querySelectorAll('#baskets th[data-k]').forEach(t=>t.addEventListener('click',()=>{
+    const g=D.groups[+t.dataset.b],k=t.dataset.k,st=sortState[g.name]||{k:null,dir:-1};
+    sortState[g.name]={k,dir:st.k===k?-st.dir:(k==='label'?1:-1)};
+    const y=window.scrollY;drawBaskets();window.scrollTo(0,y);
+  }));
+  document.querySelectorAll('#baskets tr.main').forEach(t=>t.addEventListener('click',()=>{
+    const n=document.getElementById('nw-'+t.dataset.n);n.style.display=n.style.display==='none'?'table-row':'none'}));
+}
+function drawBaskets(){
+  document.getElementById('baskets').innerHTML=D.groups.map(basketHTML).join('');
+  wireBaskets();
+}
+function draw(){
+  // overview, live box and brief are built once; only the sortable tables are redrawn
+  document.getElementById('main').innerHTML='<div id="top"></div><div id="liveHost"></div><div id="baskets" style="display:grid;gap:16px"></div><div id="briefHost"></div>';
+  document.getElementById('top').innerHTML=summary();
+  document.getElementById('liveHost').innerHTML=liveBlock();
+  mountLive();
+  document.getElementById('briefHost').innerHTML=claudeBlock();
+  document.getElementById('nav').innerHTML=[['overview','Overview'],['live','Live'],...D.groups.map(g=>[slug(g.name),g.name.replace(/^Agentic /,'')]),['claude-brief','Claude']].map(([i,l])=>`<a href="#${i}">${esc(l)}</a>`).join('');
+  drawBaskets();
+  const cb=document.getElementById('copybtn'),cm=document.getElementById('copymsg');
+  cb.addEventListener('click',async()=>{
+    const t=briefText();
+    try{await navigator.clipboard.writeText(t);cm.textContent=' Copied! Now paste it into Claude.'}
+    catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');cm.textContent=' Copied! Now paste it into Claude.'}catch(_){cm.textContent=' Copy blocked by your browser.'}ta.remove()}
+  });
+}
+fetch('watchlist.json?'+Date.now()).then(r=>{if(!r.ok)throw new Error('watchlist.json not found yet - run the workflow once');return r.json()}).then(d=>{
+  D=d;const gen=new Date(d.generated);
+  document.getElementById('stamp').textContent='Data refreshed '+gen.toLocaleString([],{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'})+' · Yahoo Finance';
+  const age=(Date.now()-gen)/36e5;
+  if(age>30){const b=document.getElementById('banner');b.style.display='block';b.textContent=`Warning: this data is ${Math.round(age)} hours old. The automatic refresh may have failed (check the Actions tab in GitHub).`}
+  draw();
+}).catch(e=>{document.getElementById('stamp').textContent='Could not load watchlist.json: '+e.message});
+</script>
+</body>
+</html>
