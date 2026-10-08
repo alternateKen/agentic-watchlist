@@ -2,11 +2,10 @@ name: Update agentic watchlist
 
 on:
   schedule:
-    # GitHub cron is UTC only and ignores daylight saving, so the schedule is written wide and the
-    # "gate" job below keeps only runs that fall in the right New York time window:
-    #   ~6:15am New York  = pre-market update
-    #   every 30 min from 9:05am to ~4:35pm New York = market hours and the post-close update
-    # (minutes 5 and 35 rather than 0 and 30: GitHub queues are busiest on the hour)
+    # GitHub starts scheduled runs LATE (hours late on this repo) and skips some, so a late run must still
+    # build: there is no clock check any more. The cron times are written wide (UTC, no daylight saving):
+    #   10:15 and 11:15 UTC = pre-market (6:15am New York in summer / winter; the other is a harmless extra)
+    #   every 30 minutes from 13:00 to 21:59 UTC covers US market hours in both summer and winter time
     - cron: "15 10,11 * * 1-5"
     - cron: "5,35 13-21 * * 1-5"
   workflow_dispatch: {}   # lets you press "Run workflow" for an on-demand refresh
@@ -21,26 +20,10 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  gate:
-    runs-on: ubuntu-latest
-    outputs:
-      go: ${{ steps.g.outputs.go }}
-    steps:
-      - id: g
-        run: |
-          H=$(TZ=America/New_York date +%-H)
-          echo "New York hour is $H, event is ${{ github.event_name }}"
-          if [ "${{ github.event_name }}" != "schedule" ] || [ "$H" = "6" ] || { [ "$H" -ge 9 ] && [ "$H" -le 16 ]; }; then
-            echo "go=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "go=false" >> "$GITHUB_OUTPUT"
-          fi
   build:
-    needs: gate
-    if: needs.gate.outputs.go == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
